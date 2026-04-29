@@ -1,9 +1,9 @@
 ---
-description: "Re-attach to a Composer doc and resume the monitor loop"
+description: "Join a Composer doc and start the monitor loop"
 argument-hint: "[composer-url]"
 ---
 
-The user wants to (re)join a Composer room and have you watch the doc. The
+The user wants to join a Composer room and have you watch the doc. The
 URL — if provided — is the argument to this command.
 
 1. **Invoke the `composer` skill** so you have its full context loaded
@@ -14,7 +14,7 @@ URL — if provided — is the argument to this command.
    - If an argument was passed (a `https://usecomposer.app/r/<id>` URL or
      a bare room id), use that.
    - If nothing was passed, ask the user: "Which Composer doc should I
-     watch? Paste the URL." Stop. Do not guess.
+     join? Paste the URL." Stop. Do not guess.
 
 3. **Call `composer_join_room({ url })`.** Output the returned
    `step1_sayToUser` to the user verbatim, then spawn the monitor subagent

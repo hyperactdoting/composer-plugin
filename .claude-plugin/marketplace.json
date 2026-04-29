@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "composer",
-      "description": "Composer plugin: open and monitor real-time markdown rooms from your editor. Ships /composer:watch, the composer skill, and registers the @composer-app/mcp MCP server.",
+      "description": "Composer plugin: open and monitor real-time markdown rooms from your editor. Ships /composer:join, the composer skill, and registers the @composer-app/mcp MCP server.",
       "author": {
         "name": "Josh Philpott",
         "url": "https://github.com/hyperactdoting",

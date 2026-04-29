@@ -13,9 +13,9 @@ and the following are available:
   mentions, posting suggestions, anchoring text, and the always-on
   monitor loop. Invoke it with `/composer` or load the skill on any
   Composer-related work.
-- **Slash command: `/composer:watch [url]`** — re-attach to a doc and
-  spawn the monitor subagent. Use after a previous monitor exits, or to
-  pick up a doc someone shared.
+- **Slash command: `/composer:join [url]`** — open a doc and spawn the
+  monitor subagent. Use to start watching, pick up a doc someone shared,
+  or re-attach after a previous monitor exits.
 - **MCP tools** under `composer_*` — `composer_create_room`,
   `composer_join_room`, `composer_next_event`, plus read and write tools
   for sections, threads, comments, and suggestions.
@@ -32,7 +32,7 @@ Triggers:
 - The user pastes a `usecomposer.app/r/<id>` URL.
 - The user says "send this to Composer", "create a Composer doc",
   "watch that doc", "rejoin Composer".
-- The user `/composer` or `/composer:watch` directly.
+- The user `/composer` or `/composer:join` directly.
 
 ## What this plugin does NOT do
 

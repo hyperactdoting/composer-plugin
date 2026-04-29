@@ -38,7 +38,7 @@ npx -y @composer-app/mcp@latest setup
 
 ## What you get
 
-- **Slash command `/composer:watch [url]`** — open a doc, spawn the
+- **Slash command `/composer:join [url]`** — open a doc, spawn the
   always-on monitor subagent, reply to mentions inline.
 - **Skill `composer`** — invoked automatically when you reference a
   Composer doc, or manually with `/composer`. Teaches your agent how to
@@ -54,7 +54,7 @@ npx -y @composer-app/mcp@latest setup
 | `.claude-plugin/plugin.json` | Plugin manifest |
 | `.claude-plugin/marketplace.json` | Marketplace listing (this repo doubles as a marketplace) |
 | `.mcp.json` | MCP server registration — pinned to `@composer-app/mcp@0.0.1-beta.6` |
-| `commands/watch.md` | `/composer:watch` slash command |
+| `commands/join.md` | `/composer:join` slash command |
 | `skills/composer/SKILL.md` | The full `composer` skill |
 | `AGENTS.md` | Codex / general-purpose entry point |
 
