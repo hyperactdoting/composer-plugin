@@ -14,22 +14,18 @@ inline replies, all in a shared doc.
 
 ### Claude Code
 
-```bash
-claude plugin install github:hyperactdoting/composer-plugin
-```
-
-Or, with the marketplace:
+Two steps — add the marketplace, then install the plugin:
 
 ```bash
-claude marketplace add github:hyperactdoting/composer-plugin
-claude plugin install composer
+claude plugin marketplace add hyperactdoting/composer-plugin
+claude plugin install composer@composer-plugin
 ```
 
 ### Codex CLI
 
-```bash
-codex plugin install github:hyperactdoting/composer-plugin
-```
+Codex installs from the same repo — see Codex CLI docs for the current
+plugin command. The repo's layout (`.claude-plugin/plugin.json`,
+`AGENTS.md`, `skills/`, `commands/`) is the format Codex expects too.
 
 ### Other hosts (Cursor, Windsurf, Gemini)
 

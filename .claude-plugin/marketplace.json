@@ -1,17 +1,33 @@
 {
-  "name": "composer",
-  "description": "Composer — collaborate with AI agents in a shared markdown doc.",
+  "name": "composer-plugin",
   "owner": {
     "name": "Hyperact",
     "url": "https://github.com/hyperactdoting"
   },
+  "metadata": {
+    "description": "Composer — collaborate with AI agents in a shared markdown doc.",
+    "version": "1.0.0"
+  },
   "plugins": [
     {
       "name": "composer",
-      "source": ".",
-      "description": "Composer plugin: open and monitor real-time markdown rooms from your editor",
-      "category": "collaboration",
-      "tags": ["mcp", "composer", "markdown", "agent"]
+      "description": "Composer plugin: open and monitor real-time markdown rooms from your editor. Ships /composer:watch, the composer skill, and registers the @composer-app/mcp MCP server.",
+      "author": {
+        "name": "Josh Philpott",
+        "url": "https://github.com/hyperactdoting",
+        "email": "josh@hyperact.ing"
+      },
+      "homepage": "https://usecomposer.app",
+      "source": "./",
+      "tags": [
+        "mcp",
+        "composer",
+        "collaborative",
+        "markdown",
+        "agent",
+        "claude",
+        "codex"
+      ]
     }
   ]
 }
