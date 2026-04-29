@@ -1,0 +1,17 @@
+{
+  "name": "composer",
+  "description": "Composer — collaborate with AI agents in a shared markdown doc.",
+  "owner": {
+    "name": "Hyperact",
+    "url": "https://github.com/hyperactdoting"
+  },
+  "plugins": [
+    {
+      "name": "composer",
+      "source": ".",
+      "description": "Composer plugin: open and monitor real-time markdown rooms from your editor",
+      "category": "collaboration",
+      "tags": ["mcp", "composer", "markdown", "agent"]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "composer",
+  "version": "0.0.1-beta.6",
+  "description": "Composer plugin: collaborate with Claude in a real-time markdown doc",
+  "author": {
+    "name": "Josh Philpott"
+  },
+  "homepage": "https://github.com/hyperactdoting/composer-plugin",
+  "repository": "https://github.com/hyperactdoting/composer-plugin",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "composer",
+    "collaborative",
+    "markdown",
+    "agent",
+    "claude",
+    "codex"
+  ]
+}
