@@ -53,7 +53,7 @@ npx -y @composer-app/mcp@latest setup
 |---|---|
 | `.claude-plugin/plugin.json` | Plugin manifest |
 | `.claude-plugin/marketplace.json` | Marketplace listing (this repo doubles as a marketplace) |
-| `.mcp.json` | MCP server registration — pinned to `@composer-app/mcp@0.0.1-beta.6` |
+| `.mcp.json` | MCP server registration — pinned to `@composer-app/mcp@0.0.1` |
 | `commands/join.md` | `/composer:join` slash command |
 | `skills/composer/SKILL.md` | The full `composer` skill |
 | `AGENTS.md` | Codex / general-purpose entry point |
@@ -62,7 +62,7 @@ npx -y @composer-app/mcp@latest setup
 
 This plugin tracks the underlying `@composer-app/mcp` npm package. Each
 release publishes the matching version of both. The current pinned
-version is **0.0.1-beta.6**.
+version is **0.0.1**.
 
 ## License
 

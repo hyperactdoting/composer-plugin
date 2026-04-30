@@ -2,7 +2,11 @@
   "mcpServers": {
     "composer-mcp": {
       "command": "npx",
-      "args": ["-y", "@composer-app/mcp@0.0.1-beta.6", "mcp"]
+      "args": [
+        "-y",
+        "@composer-app/mcp@latest",
+        "mcp"
+      ]
     }
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: monitor
-description: Use when you're running the Composer monitor loop — spawned as a subagent off `composer_create_room` / `composer_join_room`, or otherwise about to call `composer_next_event`. Covers the spawn template, mention filtering, the event payload, and the three exit rules.
+description: Use when you're running the Composer monitor loop — spawned as a subagent off `composer_create_room` / `composer_join_room`, or otherwise about to call `composer_next_event`. Covers the spawn template, mention filtering, the event payload, and the five exit rules.
 ---
 
 # Composer monitor loop
@@ -12,29 +12,64 @@ and immediately call the tool again. The doc IS your conversation —
 do not narrate to the parent between ticks.
 
 This skill is for the agent **inside** the loop. The parent host that
-spawns you uses the umbrella `composer` skill.
+spawns you uses `composer:create` (after `composer_create_room`) or
+`composer:join` (after `composer_join_room`).
 
 ## How the parent spawns you
 
-The umbrella skill tells the host to spawn an `Agent` with:
+The parent skill tells the host to spawn an `Agent` with:
 
 - `subagent_type: "general-purpose"`
 - `run_in_background: true`
 - `description: "Composer monitor: <roomId>"`
 - prompt: a short brief that includes the room's `{roomId}`, the
-  agent's `{actingAs}`, and these three exit rules:
+  agent's `{actingAs}`, and the five exit rules below.
+
+## Exit rules
+
+When you exit, your **final output line is the user-visible goodbye** —
+the parent surfaces it back to the main thread. Voice: first-person,
+casual, the same agent saying goodbye. Not a system notification, not
+a stack trace. **For terminal exits #1, #3, #4, the goodbye text is
+returned by the MCP as `userMessage` — print it verbatim, do not
+paraphrase.** Exit #5 (unrecoverable error) has no MCP-supplied text
+because the loop never returned cleanly; use the canonical line below.
 
 > Exit and return when ANY of these happen:
-> 1. `composer_next_event` returns `kind: "timeout"` with
->    `recentActivity: false` — exit silently. Do not post a farewell or
->    any "I'm leaving" message in the doc.
-> 2. A request inside the doc clearly needs the parent terminal (a code
->    change, a shell command, an external action the parent would do).
->    Post a short reply: *"This seems like a bigger change — let's bring
->    it back to where I'm running and pick it up there,"* then exit with
->    a one-sentence summary of the ask.
-> 3. An unrecoverable error (auth lost, room destroyed). Exit with the
->    error.
+>
+> **1. Idle timeout.** `composer_next_event` returns `kind: "timeout"`
+> with `recentActivity: false`, `userMessage`, and `instruction` (no
+> `requiredNextToolCall`). The doc has been silent for the configured
+> quiet window. Do **not** post anything in the doc — awareness has
+> already cleared. Print `userMessage` verbatim to the terminal, then
+> exit.
+>
+> **2. Doc-side handoff.** A request inside the doc clearly needs the
+> parent terminal (a code change, a shell command, an external action
+> the parent would do). Post this short reply **in the thread**, then
+> exit with a one-sentence summary of the ask:
+>
+> > *Let's chat more about this in our connected session.*
+>
+> **3. Server kicked the client.** Close code `4403` (old MCP), `4410`
+> (kill switch), or HTTP 403 on upgrade. `composer_next_event` returns
+> `kind: "timeout"` with `userMessage` carrying the kick goodbye. Print
+> `userMessage` verbatim and exit; don't post in the doc — you're
+> being told to leave the room.
+>
+> **4. Reconnect aborted.** The client circuit breaker tripped after 15
+> consecutive failed reconnects (network down, server unreachable).
+> Same shape as #3 — `composer_next_event` returns
+> `kind: "timeout"` with the appropriate `userMessage`. Print verbatim
+> and exit.
+>
+> **5. Unrecoverable mid-loop error.** Auth lost, room destroyed, or
+> any other thrown error not covered above. The MCP can't supply a
+> `userMessage` because the call didn't return cleanly. Print the
+> error AND this line, then exit:
+>
+> > *Something went wrong and I had to stop. Try running
+> > `/composer:join` in a bit to bring me back.*
 
 Default `composer_next_event` timeout is 30s. Don't shorten it
 arbitrarily.
@@ -56,11 +91,15 @@ The user was working in the doc recently — they just didn't tag you.
 The return includes `requiredNextToolCall`. Execute it. Stay in the
 loop.
 
-### `kind: "timeout"` with `recentActivity: false`
+### `kind: "timeout"` without `requiredNextToolCall`
 
-The doc has been silent for the configured quiet window (default 15
-min). The return has `instruction` but **no** `requiredNextToolCall`.
-Exit silently per rule 1. Do not post a farewell anywhere.
+The return has `userMessage` and `instruction`. This branch covers
+**three** exits (rules 1, 3, 4) — the MCP picks the right `userMessage`
+based on whether the doc went silent (idle), the server kicked us
+(close code 4403/4410/HTTP 403), or the reconnect breaker tripped
+(15 consecutive failed retries). You don't need to distinguish the
+three: print `userMessage` verbatim to the terminal and exit. Do not
+post in the doc.
 
 ## The mention event payload
 
