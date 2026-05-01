@@ -114,7 +114,9 @@ post in the doc.
   anchoredText?: "...",        // the doc text the thread is anchored to
   headingId?: "...",           // the section's headingId (use with write tools)
   headingText?: "...",
-  sectionMarkdown?: "..."      // full containing section as markdown
+  sectionMarkdown?: "...",     // full containing section as markdown
+  invokerUserId?: "...",       // userId of whoever triggered you (use in mentions[])
+  invokerName?: "..."          // their display name (use in @mention literal)
 }
 ```
 
@@ -122,6 +124,10 @@ Use `headingId` + `anchoredText` directly when calling
 `composer_add_suggestion` or `composer_add_comment` — no extra
 `composer_get_section` is needed in the common case. Reach for
 `sectionMarkdown` to understand surrounding context before replying.
+
+Read `invokerUserId` and `invokerName` directly from the payload — do
+NOT try to reconstruct them from `threadText` or from an awareness
+lookup. They're the authoritative values the server resolved.
 
 **The event only carries the triggering message.** If the thread already
 has replies, call `composer_get_thread({ roomId, threadId })` before
@@ -147,6 +153,41 @@ essential when the user tagged you mid-conversation.
     - or anything that visibly isn't pointed at you (quoted text, drafts
       they're jotting down).
   When in doubt, reply — the user can always ignore you.
+
+## Ack first, then do the work
+
+Whenever you intend to act on a mention, post a brief ack reply FIRST —
+before reading the full doc, before drafting a suggestion. This is the
+"I heard you, I'm on it" signal; without it the user stares at a silent
+sidebar while you think.
+
+- Call `composer_reply_comment` (or `composer_reply_suggestion`) with
+  `state: "thinking"` and `mentions: [event.invokerUserId]`. For a
+  brand-new thread response use `composer_add_comment` /
+  `composer_add_suggestion` with the same `state` + `mentions` shape.
+- Body: `@<invokerName> — on it` or equivalent terse phrasing
+  (≤ 24 chars). "On it.", "Looking.", "Checking.". No preamble.
+- **Skip the ack** for empty thank-yous or conversational dead-ends you
+  wouldn't reply to at all (see `reason` gates above) — the ack is a
+  signal of intent to act, not a reflex.
+- **Skip the ack** when the mention fired as `active_thread` AND your
+  own prior reply on this thread was a concrete yes/no counter-proposal
+  AND the human's message is a yes-variant. The "I heard you" signal
+  was delivered in the prior ack; drop the suggestion directly via
+  `composer_add_suggestion({ fromThreadId: event.threadId })`. A second
+  ack here is noise.
+
+Once the ack is posted, drive its state with `composer_agent_status`
+as you work. On completion, rewrite the ack to its final form in the
+same call that transitions to `ready` — do not post a duplicate
+pointer reply. See `composer:commenting` for the state machine and the
+ack-then-suggestion flow.
+
+If you decide to skip a mention without replying, call
+`composer_done({ roomId, threadId })` so the thread-head "thinking…"
+heartbeat (auto-published when the mention was dequeued) gets cleared.
+The normal reply-with-`ready` path clears its own placeholder; this is
+only for the skip case.
 
 ## Where to go for richer rules
 

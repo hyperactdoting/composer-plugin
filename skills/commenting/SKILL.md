@@ -59,6 +59,98 @@ of your response from this:
 For suggestion craft (anchoring, ripples, multi-span), load
 **`composer:suggesting`**.
 
+## State and the ack-first flow
+
+Every agent-authored reply / comment / suggestion carries a lifecycle
+state the UI animates: **`thinking → working → replying → ready`**.
+The mention loop in `composer:monitor` opens this with an ack-first
+reply (`state: "thinking"`); from there you advance state with
+`composer_agent_status`:
+
+```
+composer_agent_status({
+  roomId,
+  threadId,
+  replyId?,        // identifies which reply you own; omit for thread-head
+  state,           // "thinking" | "working" | "replying" | "ready"
+  text?,           // rewrite the body (only meaningful on "ready")
+  note?,           // short human-readable progress line
+  kind?            // "comment" | "suggestion" — disambiguates head records
+})
+```
+
+- `thinking` — initial ack, set by the `composer_add_*` /
+  `composer_reply_*` call that posted it.
+- `working` — substantive work in flight (reading the doc, computing,
+  drafting). Set this whenever you expect a gap.
+- `replying` — about to write the final text. Optional, brief.
+- `ready` — done. Pass `text: "<final body>"` to rewrite the ack in
+  place atomically; the awareness heartbeat is pruned in the same call.
+
+**Silence is the failure mode.** If you're about to do something slow
+(fetch the full doc, compute a non-trivial diff, call another tool)
+transition to `working` first. The UI collapses transitions faster
+than ~400 ms, so don't worry about being too fast — worry about being
+silent for >2 s without a `working` flip. Use `note` to surface
+progress where it helps: `note: "Reading section 3…"`,
+`note: "Drafting suggestion…"`.
+
+**Rewrite-on-ready replaces a duplicate "done" reply.** When the
+substantive answer is a standalone artifact (a suggestion, a
+cross-span comment, a doc link), DO NOT post a second pointer reply.
+Rewrite the existing ack in place to a thin pointer and mark `ready`
+in the same call:
+
+```
+composer_agent_status({
+  roomId, threadId, replyId,
+  state: "ready",
+  text: "Posted a suggestion below."
+})
+```
+
+When the substantive answer IS the reply text, do the same — rewrite
+the ack to that text and set `ready` in the same call. Do not post a
+separate follow-up reply.
+
+### Worked example — ack-then-suggestion
+
+```
+// 1. Mention arrives via composer_next_event.
+//    { kind: "mention", threadId: "t_abc", invokerUserId: "u_jess",
+//      invokerName: "Jess", reason: "direct_mention", ... }
+
+// 2. Ack first.
+const { replyId } = composer_reply_comment({
+  roomId, threadId: "t_abc",
+  text: "@Jess — on it",
+  mentions: ["u_jess"],
+  state: "thinking",
+});
+
+// 3. Transition to working before any slow step.
+composer_agent_status({
+  roomId, threadId: "t_abc", replyId,
+  state: "working",
+  note: "Reading section 3…",
+});
+
+// 4. Post the substantive artifact.
+composer_add_suggestion({
+  roomId, fromThreadId: "t_abc", replacementText: "…",
+});
+
+// 5. Rewrite the ack and mark ready atomically.
+composer_agent_status({
+  roomId, threadId: "t_abc", replyId,
+  state: "ready",
+  text: "Posted a suggestion below.",
+});
+```
+
+No extra pointer reply. The rewrite + suggestion card together are
+the complete response.
+
 ## Empty acknowledgements: don't
 
 Never post a reply that's just "👍", "got it", or "thanks". If the

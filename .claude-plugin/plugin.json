@@ -1,6 +1,6 @@
 {
   "name": "composer",
-  "version": "0.0.1",
+  "version": "0.0.4-beta.0",
   "description": "Composer plugin: collaborate with Claude in a real-time markdown doc",
   "author": {
     "name": "Josh Philpott"
