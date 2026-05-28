@@ -14,5 +14,5 @@ disclosure timeline.
 - The `composer-mcp` MCP server (`@composer-app/mcp` on npm).
 - This plugin's manifest, slash commands, skills, and any bundled
   configuration.
-- The Composer service at `usecomposer.app` (in scope, but report
+- The Composer service at `usecomposer.md` (in scope, but report
   service-side issues directly via the email above).

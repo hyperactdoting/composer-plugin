@@ -29,7 +29,7 @@ obvious from the tool schemas alone.
 
 Triggers:
 
-- The user pastes a `usecomposer.app/r/<id>` URL.
+- The user pastes a `usecomposer.md/d/<id>` URL.
 - The user says "send this to Composer", "create a Composer doc",
   "watch that doc", "rejoin Composer".
 - The user `/composer` or `/composer:join` directly.
@@ -45,4 +45,4 @@ Triggers:
 
 - Plugin source: https://github.com/hyperactdoting/composer-plugin
 - MCP source: published to npm as `@composer-app/mcp`
-- Composer service: https://usecomposer.app
+- Composer service: https://usecomposer.md

@@ -1,6 +1,6 @@
 ---
 name: join
-description: Use when the user wants to JOIN an existing Composer doc — pasting a `usecomposer.app/r/<id>` URL, running `/composer:join`, or otherwise asking you to attach to a room they already have. Covers first-run agent-name prompt, the `composer_join_room` call, the ordered `step1_sayToUser` / `step2_callTool` return, and the monitor-subagent handoff.
+description: Use when the user wants to JOIN an existing Composer doc — pasting a `usecomposer.md/d/<id>` URL, running `/composer:join`, or otherwise asking you to attach to a room they already have. Covers first-run agent-name prompt, the `composer_join_room` call, the ordered `step1_sayToUser` / `step2_callTool` return, and the monitor-subagent handoff.
 ---
 
 # Composer — Join a doc
@@ -11,7 +11,7 @@ respond to mentions.
 
 ## When to load this skill
 
-- The user pastes a `usecomposer.app/r/<id>` URL.
+- The user pastes a `usecomposer.md/d/<id>` URL.
 - They run `/composer:join <url>` (the slash command delegates here).
 - They ask you to "watch this Composer doc" / "join this room" with a
   URL or roomId.
@@ -19,38 +19,57 @@ respond to mentions.
 If they want to spin up a NEW doc from markdown they've shown you, that's
 **create**, not join — load `composer:create` instead.
 
+## Talk like a person, not the MCP
+
+Don't *volunteer* tool names, internal codes (`COMPOSER_AUTH_REQUIRED`,
+HTTP statuses, `4403`), file paths, or mechanics ("polling", "device
+flow"). Translate tool results into plain language before relaying.
+Verification and room URLs are the exceptions — the user clicks those,
+paste them verbatim. If the user explicitly asks what's happening under
+the hood, answer honestly. See `composer:create` ➜ "Talk like a person,
+not the MCP" for the full guidance.
+
 ## Steps
 
-### 1. First-run only — agree on a name
+### 1. Sign in (kick this off immediately, every session)
 
-If the MCP returns an "ask the user what to call you" error, no
-`actingAs` name is saved on this machine yet. Stop and ask. Suggest one
-default:
+Same as the `composer:create` skill: **always call `composer_login`
+first**, before `composer_join_room`. If the user is already signed in,
+it returns instantly and you proceed silently. If not, the first call
+returns `COMPOSER_AUTH_REQUIRED` with a one-tap approval link — tell the
+user once (warmly) that you've kicked off sign-in, paste the link
+verbatim, and **immediately call `composer_login` again** to block until
+they approve. See `composer:create` step 1 for the full pattern,
+including the timeout copy and the "don't ask permission, just kick it
+off" framing.
 
-- If you know the user's first name → `"<FirstName>'s Agent"` (e.g.
-  `"Josh's Agent"`).
-- Otherwise something playful that isn't a model family — `Monty`,
-  `Gerty`, `Rosie`, `Otto`, `Pip`. **Never** suggest Claude, Gemini,
-  Sonnet, Opus, Haiku, GPT, or any other model name.
+### 2. First-run only — agree on the agent's display name
 
-Phrase: *"I'll go by Monty in Composer docs — sound good, or pick your
-own?"* Retry with their answer as `actingAs`. The name persists to
-`~/.composer/user.json` and is reused forever.
+If `composer_join_room` (step 4) returns an "ask the user what to call
+you" error, no `actingAs` name is saved yet. Use the `user.name` from
+`composer_login` to propose a default — `"<FirstName>'s Agent"` (e.g.
+`"Josh's Agent"`). Account name missing or handle-like → fall back to
+something playful: `Monty`, `Gerty`, `Rosie`, `Otto`, `Pip`. **Never**
+suggest Claude, Gemini, Sonnet, Opus, Haiku, GPT, or any other model
+name. Phrase as a single sentence the user can accept or override:
+*"I'll go by Josh's Agent in Composer docs — sound good?"* Retry with
+their answer as `actingAs`. The name persists to `~/.composer/user.json`
+and is reused forever — this step only happens once per machine.
 
-### 2. Resolve the URL
+### 3. Resolve the URL
 
-- If the user pasted a `https://usecomposer.app/r/<id>` URL, use it.
+- If the user pasted a `https://usecomposer.md/d/<id>` URL, use it.
 - If `/composer:join` was run with no argument, ask: *"Which Composer
   doc should I join? Paste the URL."* Stop. Do not guess.
 - A bare roomId (no `https://` prefix) is also acceptable.
 
-### 3. Call `composer_join_room`
+### 4. Call `composer_join_room`
 
 ```
 composer_join_room({ url: "<the URL or roomId>" })
 ```
 
-### 4. Honor the ordered return
+### 5. Honor the ordered return
 
 Success returns two ordered steps:
 
@@ -61,7 +80,7 @@ Success returns two ordered steps:
    pointing at `composer_next_event`. **Do not run it inline.** Spawn
    the monitor subagent (next step), then end your turn.
 
-### 5. Spawn the monitor subagent
+### 6. Spawn the monitor subagent
 
 Use the `Agent` tool with:
 

@@ -11,7 +11,7 @@ Here's what crosses the wire and what stays local.
 
 ## Sent to the Composer service
 
-When you create or join a room, the following is sent to `usecomposer.app`:
+When you create or join a room, the following is sent to `usecomposer.md`:
 
 - The doc body and any edits you make.
 - Comments, replies, and suggestions you post.
