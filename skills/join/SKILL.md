@@ -109,12 +109,32 @@ two listeners on the same room means duplicated replies.
 ### When the monitor exits
 
 You'll get a notification when the background subagent finishes. Its
-final output line is the agent's goodbye — written in the agent's
-voice (idle timeout, server kick, reconnect aborted, etc., per the
-`composer:monitor` exit rules). **Relay that line verbatim to the user
-in the main thread** so they see why the agent left and how to bring
-it back. Don't paraphrase or wrap it in extra explanation; the
-goodbye line already carries the next step (`/composer:join` etc.).
+final output line tells you which exit fired (idle timeout, server
+kick, reconnect aborted, doc-side handoff, etc., per the
+`composer:monitor` exit rules). Branch on it:
+
+**Handoff exit (rule #2).** The owner asked for something the
+terminal needs to do — a shell command, a code edit, an external
+action. The subagent's final line summarizes the ask. Two things to
+do, in order:
+
+1. **Execute the ask** from the main thread. Use real tools (`Bash`,
+   `Edit`, `Write`, etc.) and then report the result back into the
+   doc via the Composer write tools (`composer_reply_comment` / etc.)
+   on the same `threadId` the subagent named.
+2. **Relaunch a fresh monitor subagent** — same spawn template as
+   step 6 above (`general-purpose`, `run_in_background: true`, prompt
+   that invokes `composer:monitor` for the same `{roomId}` /
+   `{actingAs}`). Do this even if the ask is still in progress —
+   without it, the room goes silent and any further mentions are
+   missed.
+
+**All other exits (rules #1, #3, #4, #5).** The subagent printed a
+user-visible goodbye line (`userMessage` from the MCP or, for #5, the
+canonical recovery line). **Relay that line verbatim to the user in
+the main thread.** Don't paraphrase or wrap it in extra explanation;
+the goodbye already carries the next step (`/composer:join` etc.).
+Do **not** relaunch — the room is closed.
 
 ## Terminal-side asks after joining
 
