@@ -19,9 +19,12 @@ spawns you uses `composer:create` (after `composer_create_room`) or
 
 The parent skill tells the host to spawn an `Agent` with:
 
-- `subagent_type: "general-purpose"`
+- `subagent_type: "composer:watch"` (the plugin's own agent type;
+  `"general-purpose"` is the fallback when it isn't available)
 - `run_in_background: true`
-- `description: "Composer monitor: <roomId>"`
+- `description`: the `step1_startMonitor.agentDescription` from the
+  create/join return, verbatim — `<actingAs> · "<doc title>"` (roomId
+  when the doc has no title yet). User-visible in the host's agent list.
 - prompt: a short brief that includes the room's `{roomId}`, the
   agent's `{actingAs}`, and the five exit rules below.
 

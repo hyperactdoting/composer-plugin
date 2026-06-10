@@ -1,6 +1,6 @@
 ---
 name: join
-description: Use when the user wants to JOIN an existing Composer doc — pasting a `usecomposer.md/d/<id>` URL, running `/composer:join`, or otherwise asking you to attach to a room they already have. Covers first-run agent-name prompt, the `composer_join_room` call, the ordered `step1_sayToUser` / `step2_callTool` return, and the monitor-subagent handoff.
+description: Use when the user wants to JOIN an existing Composer doc — pasting a `usecomposer.md/d/<id>` URL, running `/composer:join`, or otherwise asking you to attach to a room they already have. Covers first-run agent-name prompt, the `composer_join_room` call, the ordered `step1_startMonitor` / `step2_sayToUser` return (spawn first, speak last), and the monitor-subagent handoff.
 ---
 
 # Composer — Join a doc
@@ -39,9 +39,11 @@ it returns instantly and you proceed silently. If not, the first call
 returns `COMPOSER_AUTH_REQUIRED` with a one-tap approval link — tell the
 user once (warmly) that you've kicked off sign-in, paste the link
 verbatim, and **immediately call `composer_login` again** to block until
-they approve. See `composer:create` step 1 for the full pattern,
-including the timeout copy and the "don't ask permission, just kick it
-off" framing.
+they approve. A `COMPOSER_AUTH_PENDING` return means they haven't
+approved yet — make sure they've seen the link, then call again to keep
+waiting. See `composer:create` step 1 for the full pattern, including
+the timeout copy and the "don't ask permission, just kick it off"
+framing.
 
 ### 2. First-run only — agree on the agent's display name
 
@@ -71,37 +73,42 @@ composer_join_room({ url: "<the URL or roomId>" })
 
 ### 5. Honor the ordered return
 
-Success returns two ordered steps:
+Success returns two ordered steps. The order is deliberate: **spawn
+first, speak last** — end-of-turn text reliably reaches the user, text
+sandwiched before a tool call can get lost.
 
-1. **`step1_sayToUser`** — output this **first**. It confirms the URL
-   the user just joined and carries the `@<your-name>` tagging hint.
-   Light paraphrasing OK; don't drop the URL or the mention syntax.
-2. **`step2_callTool`** — a structured `{ tool, args, why }` directive
-   pointing at `composer_next_event`. **Do not run it inline.** Spawn
-   the monitor subagent (next step), then end your turn.
+1. **`step1_startMonitor`** — a structured `{ tool, args, how }`
+   directive pointing at `composer_next_event`. **Do not run it
+   inline.** Spawn the monitor subagent (next step).
+2. **`step2_sayToUser`** — after the spawn, output this as your
+   **final message and end your turn**. It confirms the doc you joined,
+   carries the `@<your-name>` tagging hint, and ends with the URL.
+   Light paraphrasing OK; don't drop the URL or the mention syntax,
+   and don't add anything after it.
 
 ### 6. Spawn the monitor subagent
 
 Use the `Agent` tool with:
 
-- `subagent_type: "general-purpose"`
+- `subagent_type: "composer:watch"` — the plugin ships this agent
+  type; its system prompt already carries the monitor briefing. Fall
+  back to `"general-purpose"` only if the type isn't available.
 - `run_in_background: true`
-- `description: "Composer monitor: <roomId>"`
+- `description`: the `step1_startMonitor.agentDescription` value
+  **verbatim** (e.g. `Josh's Agent · "Project Phoenix"`). It's
+  user-visible in the host's agent list; the MCP already built it from
+  the agent name and the doc title, so don't compose your own.
 - `prompt`: tell the subagent to **invoke the `composer:monitor`
   skill**, then run the loop on `{roomId}` as `{actingAs}`. Don't paste
   the loop rules inline — the `composer:monitor` skill carries them
   (spawn template, mention filtering, exit rules, event payload).
 
-Once spawned, **end your turn immediately**. Do not output any text
-after the spawn — no closing recap, no "monitor is running" status
-line, no restating the mention syntax. The host already shows a
-status indicator for the backgrounded `Agent` tool call; that's the
-user's confirmation. Anything you say after `step1_sayToUser` just
-duplicates it. The protocol is strict:
+The protocol is strict:
 
-1. Output `step1_sayToUser` (verbatim or lightly paraphrased).
-2. Spawn the `Agent`.
-3. End turn. No closing remark.
+1. Spawn the `Agent` (step 1 of the return).
+2. Output `step2_sayToUser` (verbatim or lightly paraphrased) as your
+   final message.
+3. End turn. Nothing after the URL message.
 
 Also: do **not** poll `composer_next_event` from the main thread —
 two listeners on the same room means duplicated replies.
@@ -123,7 +130,7 @@ do, in order:
    doc via the Composer write tools (`composer_reply_comment` / etc.)
    on the same `threadId` the subagent named.
 2. **Relaunch a fresh monitor subagent** — same spawn template as
-   step 6 above (`general-purpose`, `run_in_background: true`, prompt
+   step 6 above (`composer:watch`, `run_in_background: true`, prompt
    that invokes `composer:monitor` for the same `{roomId}` /
    `{actingAs}`). Do this even if the ask is still in progress —
    without it, the room goes silent and any further mentions are
