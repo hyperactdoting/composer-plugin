@@ -175,3 +175,13 @@ Write tools take:
 If you get `text_not_found`, the error message includes the current
 section text. Re-plan against the fresh text and retry. Never retry
 with stale content.
+
+## Blank docs
+
+A blank doc has no sections, so there is nothing to anchor a suggestion
+to — `composer_add_suggestion` and `composer_add_comment` will fail and
+tell you so. Don't fight the anchors: call
+`composer_write_doc({ roomId, markdown })` ONCE to write the first
+draft, then suggest normally against the outline it returns. The tool
+is hard-gated to blank docs; the moment the doc has content, every
+change goes back through suggestions and the user's accept click.

@@ -144,6 +144,10 @@ has replies, call `composer_get_thread({ roomId, threadId })` before
 replying. The return has every reply with author and timestamp —
 essential when the user tagged you mid-conversation.
 
+**Blank doc?** If a write tool reports the doc is blank (nothing to
+anchor to), write the first draft with `composer_write_doc`, then
+anchor follow-ups to the outline it returns.
+
 ## Who you respond to: owner-only by default
 
 You exist to serve **your owner** — the user running this MCP. Other

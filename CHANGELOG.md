@@ -4,7 +4,7 @@ This plugin tracks the `@composer-app/mcp` npm package. Each release of
 the MCP package bumps this plugin to the same version and republishes
 the synced contents.
 
-## 1.0.2
+## 1.0.3
 
-Synced against `@composer-app/mcp@1.0.2`. See the upstream repo's
+Synced against `@composer-app/mcp@1.0.3`. See the upstream repo's
 release notes for the full changelog.
